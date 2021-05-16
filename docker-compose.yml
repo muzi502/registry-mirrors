@@ -8,8 +8,8 @@ services:
       - ./config.yml:/etc/docker/registry/config.yml
     ports:
       - 127.0.0.1:5000:5000
-    environment:
-      - REGISTRY_HTTP_ADDR=0.0.0.0:5000
+    depends_on:
+      - redis
 
   gcr-registry:
     image: registry:2
@@ -18,10 +18,11 @@ services:
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
     ports:
-      - 127.0.0.1:5001:5001
+      - 127.0.0.1:5001:5000
     environment:
-      - REGISTRY_HTTP_ADDR=0.0.0.0:5001
       - REGISTRY_PROXY_REMOTEURL=https://k8s.gcr.io
+    depends_on:
+      - redis
 
   hub-registry:
     image: registry:2
@@ -30,10 +31,11 @@ services:
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
     ports:
-      - 127.0.0.1:5002:5002
+      - 127.0.0.1:5002:5000
     environment:
-      - REGISTRY_HTTP_ADDR=0.0.0.0:5002
-      - REGISTRY_PROXY_REMOTEURL=https://docker.io
+      - REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
+    depends_on:
+      - redis
 
   quay-registry:
     image: registry:2
@@ -42,7 +44,13 @@ services:
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
     ports:
-      - 127.0.0.1:5003:5003
+      - 127.0.0.1:5003:5000
     environment:
-      - REGISTRY_HTTP_ADDR=0.0.0.0:5003
       - REGISTRY_PROXY_REMOTEURL=https://quay.io
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
