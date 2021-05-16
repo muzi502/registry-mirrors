@@ -51,6 +51,16 @@ services:
       - redis
 
   redis:
-    image: redis:alpine
+    image: docker.io/bitnami/redis:6.2
     container_name: redis
     restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+    command: /opt/bitnami/scripts/redis/run.sh --maxmemory 100mb --maxmemory-policy allkeys-lru
+
+volumes:
+  redis_data:
+    driver: local
