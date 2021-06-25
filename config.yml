@@ -4,7 +4,7 @@ log:
     service: registry
 storage:
   cache:
-    blobdescriptor: inmemory
+    blobdescriptor: redis
   filesystem:
     rootdirectory: /var/lib/registry
   delete:

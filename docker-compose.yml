@@ -1,13 +1,45 @@
 version: '3'
 services:
+  redis:
+    image: docker.io/bitnami/redis:6.2
+    container_name: redis
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+    command: /opt/bitnami/scripts/redis/run.sh --maxmemory 100mb --maxmemory-policy allkeys-lru
+
+  push-registry:
+    image: registry:2
+    container_name: push-registry
+    restart: always
+    volumes:
+      - ./auth.htpasswd:/etc/docker/registry/auth.htpasswd
+      - ./config.yml:/etc/docker/registry/config.yml
+      - ./data:/var/lib/registry
+    environment:
+      - REGISTRY_AUTH=htpasswd
+      - REGISTRY_AUTH_HTPASSWD_REALM=Registry
+      - REGISTRY_AUTH_HTPASSWD_PATH=/etc/docker/registry/auth.htpasswd
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    depends_on:
+      - redis
+
   all-registry:
     image: registry:2
     container_name: all-registry
     restart: always
     volumes:
+      - ./auth.htpasswd:/etc/docker/registry/auth.htpasswd
       - ./config.yml:/etc/docker/registry/config.yml
-    ports:
-      - 127.0.0.1:5000:5000
+      - ./data:/var/lib/registry
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+      # - REGISTRY_PROXY_REMOTEURL=http://push-registry:5000
+      # - REGISTRY_PROXY_USERNAME=
+      # - REGISTRY_PROXY_PASSWORD=
     depends_on:
       - redis
 
@@ -17,21 +49,19 @@ services:
     restart: always
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
-    ports:
-      - 127.0.0.1:5001:5000
+      - ./data:/var/lib/registry
     environment:
       - REGISTRY_PROXY_REMOTEURL=https://k8s.gcr.io
     depends_on:
       - redis
 
-  hub-registry:
+  docker-registry:
     image: registry:2
     container_name: hub-registry
     restart: always
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
-    ports:
-      - 127.0.0.1:5002:5000
+      - ./data:/var/lib/registry
     environment:
       - REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io
     depends_on:
@@ -43,23 +73,22 @@ services:
     restart: always
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
-    ports:
-      - 127.0.0.1:5003:5000
+      - ./data:/var/lib/registry
     environment:
       - REGISTRY_PROXY_REMOTEURL=https://quay.io
     depends_on:
       - redis
 
-  redis:
-    image: docker.io/bitnami/redis:6.2
-    container_name: redis
+  nginx:
+    image: nginx:1.19
+    container_name: nginx
     restart: always
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     volumes:
-      - 'redis_data:/bitnami/redis/data'
-    command: /opt/bitnami/scripts/redis/run.sh --maxmemory 100mb --maxmemory-policy allkeys-lru
+      - ./certs/domain.crt:/etc/nginx/domain.crt
+      - ./certs/domain.key:/etc/nginx/domain.key
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 443:443
 
 volumes:
   redis_data:
