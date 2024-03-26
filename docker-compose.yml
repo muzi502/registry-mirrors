@@ -43,15 +43,15 @@ services:
     depends_on:
       - redis
 
-  gcr-registry:
+  k8s-registry:
     image: registry:2
-    container_name: gcr-registry
+    container_name: k8s-registry
     restart: always
     volumes:
       - ./config.yml:/etc/docker/registry/config.yml
       - ./data:/var/lib/registry
     environment:
-      - REGISTRY_PROXY_REMOTEURL=https://k8s.gcr.io
+      - REGISTRY_PROXY_REMOTEURL=https://registry.k8s.io
     depends_on:
       - redis
 
