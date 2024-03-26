@@ -4,11 +4,11 @@ Bypass GFW, container registry mirrors for  kubernetes developer in China mainla
 
 ## Registry list
 
-| origin     | mirror      |
-| ---------- | ----------- |
-| docker.io  | hub.k8s.li  |
-| k8s.gcr.io | gcr.k8s.li  |
-| quay.io    | quay.k8s.li |
+| origin          | mirror      |
+| ----------      | ----------- |
+| docker.io       | hub.k8s.li  |
+| registry.k8s.io | gcr.k8s.li  |
+| quay.io         | quay.k8s.li |
 
 ## Usage
 
